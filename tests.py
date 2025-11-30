@@ -1,0 +1,69 @@
+import unittest
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+import app as tested_app
+import json
+
+class FlaskAppTests(unittest.TestCase):
+
+    def setUp(self):
+        tested_app.app.config['TESTING'] = True
+        self.app = tested_app.app.test_client()
+
+    def test_get_kg_to_lb(self):
+        r = self.app.get('/weight?kg=12')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data.decode('utf-8'), '12.0 килограммов - 26.46 фунтов')
+
+    def test_get_kg_to_lb_wrong(self):
+        r = self.app.get('/weight?kg=1o')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data.decode('utf-8'), 'Введите число!')
+
+    def test_get_lb_to_kg(self):
+        r = self.app.get('/weight?lb=8')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data.decode('utf-8'), '8.0 фунтов - 3.63 килограммов')
+
+    def test_get_lb_to_kg_wrong(self):
+        r = self.app.get('/weight?lb=2r')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data.decode('utf-8'), 'Введите число!')
+
+    def test_get_weight_wrong(self):
+        r = self.app.get('/weigh')
+        self.assertEqual(r.status_code, 404)
+
+    def test_get_km_to_mil(self):
+        r = self.app.get('/length?km=29')
+        self.assertEqual(r.status_code, 200)
+
+        self.assertEqual(r.data.decode('utf-8'), '29.0 километров - 18.02 миль')
+
+    def test_get_km_to_mil_wrong(self):
+        r = self.app.get('/length?km=ll')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data.decode('utf-8'), 'Введите число!')
+
+    def test_get_mil_to_km(self):
+        r = self.app.get('/length?mil=15')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data.decode('utf-8'), '15.0 миль - 24.14 километров')
+
+    def test_get_mil_to_km_wrong(self):
+        r = self.app.get('/length?mil=3b')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data.decode('utf-8'), 'Введите число!')
+
+    def test_get_length_wrong(self):
+        r = self.app.get('/leng')
+        self.assertEqual(r.status_code, 404)
+
+    def test_post_hello_endpoint(self):
+        r = self.app.post('/')
+        self.assertEqual(r.status_code, 404)
+
+if __name__ == '__main__':
+    unittest.main()
