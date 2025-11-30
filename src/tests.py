@@ -39,7 +39,6 @@ class FlaskAppTests(unittest.TestCase):
     def test_get_km_to_mil(self):
         r = self.app.get('/length?km=29')
         self.assertEqual(r.status_code, 200)
-
         self.assertEqual(r.data.decode('utf-8'), '29.0 километров - 18.02 миль')
 
     def test_get_km_to_mil_wrong(self):
