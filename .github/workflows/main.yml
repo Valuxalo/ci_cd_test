@@ -1,69 +1,30 @@
-import unittest
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+name: Run tests on any Push event
 
-import app as tested_app
-import json
+on:
+  push:
+    branches: ['**']
 
-class FlaskAppTests(unittest.TestCase):
+jobs:
+  run_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-    def setUp(self):
-        tested_app.app.config['TESTING'] = True
-        self.app = tested_app.app.test_client()
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.3'
 
-    def test_get_kg_to_lb(self):
-        r = self.app.get('/weight?kg=12')
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.data.decode('utf-8'), '12.0 килограммов - 26.46 фунтов')
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install coverage
 
-    def test_get_kg_to_lb_wrong(self):
-        r = self.app.get('/weight?kg=1o')
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.data.decode('utf-8'), 'Введите число!')
+      - name: Run tests with coverage
+        run: |
+          export PYTHONPATH=src
+          coverage run -m unittest src.tests
 
-    def test_get_lb_to_kg(self):
-        r = self.app.get('/weight?lb=8')
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.data.decode('utf-8'), '8.0 фунтов - 3.63 килограммов')
-
-    def test_get_lb_to_kg_wrong(self):
-        r = self.app.get('/weight?lb=2r')
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.data.decode('utf-8'), 'Введите число!')
-
-    def test_get_weight_wrong(self):
-        r = self.app.get('/weigh')
-        self.assertEqual(r.status_code, 404)
-
-    def test_get_km_to_mil(self):
-        r = self.app.get('/length?km=29')
-        self.assertEqual(r.status_code, 200)
-
-        self.assertEqual(r.data.decode('utf-8'), '29.0 километров - 18.02 миль')
-
-    def test_get_km_to_mil_wrong(self):
-        r = self.app.get('/length?km=ll')
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.data.decode('utf-8'), 'Введите число!')
-
-    def test_get_mil_to_km(self):
-        r = self.app.get('/length?mil=15')
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.data.decode('utf-8'), '15.0 миль - 24.14 километров')
-
-    def test_get_mil_to_km_wrong(self):
-        r = self.app.get('/length?mil=3b')
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.data.decode('utf-8'), 'Введите число!')
-
-    def test_get_length_wrong(self):
-        r = self.app.get('/leng')
-        self.assertEqual(r.status_code, 404)
-
-    def test_post_hello_endpoint(self):
-        r = self.app.post('/')
-        self.assertEqual(r.status_code, 404)
-
-if __name__ == '__main__':
-    unittest.main()
+      - name: Show coverage report
+        run: coverage report
